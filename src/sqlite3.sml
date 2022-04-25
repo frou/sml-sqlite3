@@ -306,7 +306,7 @@ structure SQLite3 :> SQLITE3 = struct
   fun valueToString NULL = "NULL"
     | valueToString (INTEGER i) = Int.toString i
     | valueToString (REAL r) = Real.toString r
-    | valueToString (TEXT t) = "\"" ^ t ^ "\"" (*TODO: escape quotes *)
+    | valueToString (TEXT t) = "\"" ^ String.toCString t ^ "\"" (* Unrelated to our cstring FFI stuff *)
     | valueToString (BLOB v) = "BLOB (" ^ (Int.toString (Vector.length v)) ^ " bytes)"
 
   fun rowToString (ROW l) = "(" ^ (String.concatWith ", " (map valueToString l)) ^ ")"
