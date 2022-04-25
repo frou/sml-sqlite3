@@ -4,13 +4,13 @@ signature SQLITE3 = sig
 
   type bytevec = Word8.word Vector.vector
 
-  datatype value = Null
-                 | Integer of int
-                 | Real of real
-                 | Text of string
-                 | Blob of bytevec
+  datatype value = NULL
+                 | INTEGER of int
+                 | REAL of real
+                 | TEXT of string
+                 | BLOB of bytevec
 
-  datatype row = Row of value list
+  datatype row = ROW of value list
 
   exception SqlError of string;
 

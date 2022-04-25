@@ -4,19 +4,19 @@ structure SQLite3 :> SQLITE3 = struct
   type stmt_pointer = pointer
   val null = MLton.Pointer.null
 
-  datatype db = Database of pointer
+  datatype db = DATABASE of pointer
 
-  datatype query = Query of stmt_pointer
+  datatype query = QUERY of stmt_pointer
 
   type bytevec = Word8.word Vector.vector
 
-  datatype value = Null
-                 | Integer of int
-                 | Real of real
-                 | Text of string
-                 | Blob of bytevec
+  datatype value = NULL
+                 | INTEGER of int
+                 | REAL of real
+                 | TEXT of string
+                 | BLOB of bytevec
 
-  datatype row = Row of value list
+  datatype row = ROW of value list
 
   exception SqlError of string;
 
@@ -68,7 +68,7 @@ structure SQLite3 :> SQLITE3 = struct
             SQLiteCStr.toString p
     end
 
-  fun errmsg (Database db) =
+  fun errmsg (DATABASE db) =
     if db = null then
         "[Database is NULL]"
     else
@@ -107,7 +107,7 @@ structure SQLite3 :> SQLITE3 = struct
                 if !p = null then
                     sqlError ("Database is NULL", NONE, NONE)
                 else
-                    Database (!p)
+                    DATABASE (!p)
         end
     end
 
@@ -115,12 +115,12 @@ structure SQLite3 :> SQLITE3 = struct
 
   val sqlite3_close = _import "sqlite3_close" : pointer -> int;
 
-  fun close (Database p) =
+  fun close (DATABASE p) =
     let in
         let val rc = sqlite3_close p
         in
             if rc <> 0 then
-                sqlError ("Error closing database", SOME rc, SOME (Database p))
+                sqlError ("Error closing database", SOME rc, SOME (DATABASE p))
             else
                 ()
         end
@@ -130,13 +130,13 @@ structure SQLite3 :> SQLITE3 = struct
 
   val sqlite3_prepare_v2 = _import "sqlite3_prepare_v2" : db_pointer * string * int * stmt_pointer ref * pointer -> int;
 
-  fun prepare (Database p) s =
+  fun prepare (DATABASE p) s =
     let val stmt = ref null
     in
         let val rc = sqlite3_prepare_v2 (p, s, ~1, stmt, null)
         in
             if rc <> 0 then
-                sqlError ("Error while preparing statement", SOME rc, SOME (Database p))
+                sqlError ("Error while preparing statement", SOME rc, SOME (DATABASE p))
             else
                 if !stmt = null then
                     sqlError ("Statement is NULL", NONE, NONE)
@@ -163,24 +163,24 @@ structure SQLite3 :> SQLITE3 = struct
 
   fun bindValue s idx (v: value) =
     ensureRC (case v of
-                  Null => sqlite3_bind_null (s, idx)
-                | (Integer i) => sqlite3_bind_int (s, idx, i)
-                | (Real r) => sqlite3_bind_double (s, idx, r)
-                | (Text text) => sqlite3_bind_text (s, idx, text, ~1, null)
-                | (Blob vec) => sqlite3_bind_blob (s, idx, vec, Vector.length vec, null))
+                  NULL => sqlite3_bind_null (s, idx)
+                | (INTEGER i) => sqlite3_bind_int (s, idx, i)
+                | (REAL r) => sqlite3_bind_double (s, idx, r)
+                | (TEXT text) => sqlite3_bind_text (s, idx, text, ~1, null)
+                | (BLOB vec) => sqlite3_bind_blob (s, idx, vec, Vector.length vec, null))
 
   (* Stepping statements *)
 
   val sqlite3_step = _import "sqlite3_step" : stmt_pointer -> int;
 
-  datatype step = RowStep | Done
+  datatype step = ROWSTEP | DONE
 
   fun step s =
     let val rc = sqlite3_step s
     in
         case rc of
-            101 => Done
-          | 100 => RowStep
+            101 => DONE
+          | 100 => ROWSTEP
           | c => sqlError ("Bad step", SOME rc, NONE)
     end
 
@@ -202,17 +202,17 @@ structure SQLite3 :> SQLITE3 = struct
 
   val sqlite3_column_type = _import "sqlite3_column_type" : stmt_pointer * col_index -> int;
 
-  datatype sql_type = NullType
-                    | IntegerType
-                    | RealType
-                    | TextType
-                    | BlobType
+  datatype sql_type = TYPE_NULL
+                    | TYPE_INTEGER
+                    | TYPE_REAL
+                    | TYPE_TEXT
+                    | TYPE_BLOB
 
-  fun codeToType 1 = IntegerType
-    | codeToType 2 = RealType
-    | codeToType 3 = TextType
-    | codeToType 4 = BlobType
-    | codeToType 5 = NullType
+  fun codeToType 1 = TYPE_INTEGER
+    | codeToType 2 = TYPE_REAL
+    | codeToType 3 = TYPE_TEXT
+    | codeToType 4 = TYPE_BLOB
+    | codeToType 5 = TYPE_NULL
     | codeToType i = sqlError ("Invalid type code: " ^ (Int.toString i), NONE, NONE)
 
   fun columnType s i = codeToType (sqlite3_column_type (s, i))
@@ -229,14 +229,14 @@ structure SQLite3 :> SQLITE3 = struct
 
   fun loadColumn s i =
     case (columnType s i) of
-        NullType => Null
-      | IntegerType => Integer (sqlite3_column_int (s, i))
-      | RealType => Real (sqlite3_column_double (s, i))
-      | TextType => Text (loadString (sqlite3_column_text (s, i)))
-      | BlobType => let val ptr = sqlite3_column_blob (s, i)
+        TYPE_NULL => NULL
+      | TYPE_INTEGER => INTEGER (sqlite3_column_int (s, i))
+      | TYPE_REAL => REAL (sqlite3_column_double (s, i))
+      | TYPE_TEXT => TEXT (loadString (sqlite3_column_text (s, i)))
+      | TYPE_BLOB => let val ptr = sqlite3_column_blob (s, i)
                         and len = sqlite3_column_bytes (s, i)
                     in
-                        Blob (loadVec ptr len)
+                        BLOB (loadVec ptr len)
                     end
   and loadString ptr =
       if ptr = null then
@@ -258,7 +258,7 @@ structure SQLite3 :> SQLITE3 = struct
                                              end
         in
             bind_list vals 1;
-            Query stmt
+            QUERY stmt
         end
     end
 
@@ -277,14 +277,14 @@ structure SQLite3 :> SQLITE3 = struct
                       end
                   end
         in
-            Row (loadC 0)
+            ROW (loadC 0)
         end
     end
 
-  fun exec (Query stmt) =
+  fun exec (QUERY stmt) =
     let in step stmt; finalize stmt; () end
 
-  fun execlist (Query stmt) =
+  fun execlist (QUERY stmt) =
     let val l = execlist_ stmt
     in
         finalize stmt;
@@ -292,8 +292,8 @@ structure SQLite3 :> SQLITE3 = struct
     end
   and execlist_ stmt =
     case step stmt of
-        Done => nil
-      | RowStep => let val row = loadRow stmt
+        DONE => nil
+      | ROWSTEP => let val row = loadRow stmt
                    in
                        let val tail = execlist_ stmt
                        in
@@ -303,20 +303,20 @@ structure SQLite3 :> SQLITE3 = struct
 
   (* Printing *)
 
-  fun valueToString Null = "NULL"
-    | valueToString (Integer i) = Int.toString i
-    | valueToString (Real r) = Real.toString r
-    | valueToString (Text t) = "\"" ^ t ^ "\"" (*TODO: escape quotes *)
-    | valueToString (Blob v) = "BLOB (" ^ (Int.toString (Vector.length v)) ^ " bytes)"
+  fun valueToString NULL = "NULL"
+    | valueToString (INTEGER i) = Int.toString i
+    | valueToString (REAL r) = Real.toString r
+    | valueToString (TEXT t) = "\"" ^ t ^ "\"" (*TODO: escape quotes *)
+    | valueToString (BLOB v) = "BLOB (" ^ (Int.toString (Vector.length v)) ^ " bytes)"
 
-  fun rowToString (Row l) = "(" ^ (String.concatWith ", " (map valueToString l)) ^ ")"
+  fun rowToString (ROW l) = "(" ^ (String.concatWith ", " (map valueToString l)) ^ ")"
 
   fun rowsToString l = String.concatWith "\n" (map rowToString l)
 
   fun tableExists db table =
     let val q = query db
                   "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
-                  [Text table]
+                  [TEXT table]
     in
         length (execlist q) > 0
     end

@@ -16,7 +16,7 @@ fun main () =
           end;
       let val q = query db
                         "INSERT INTO pairs VALUES (?, ?);"
-                        [Integer 10, Text "Hello, world!"]
+                        [INTEGER 10, TEXT "Hello, world!"]
       in
           exec q
       end;
