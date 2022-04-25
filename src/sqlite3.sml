@@ -262,6 +262,9 @@ structure SQLite3 :> SQLITE3 = struct
         end
     end
 
+  fun simpleQuery db str =
+    query db str []
+
   fun loadRow stmt =
     let val cols = columnCount stmt
     in

@@ -6,6 +6,9 @@ fun main () =
   let val db = opendb "testdb"
   in
       println "Opened database";
+      case execlist (simpleQuery db "SELECT sqlite_version();") of
+        [ ROW [TEXT version ] ] => println ("Using SQLite library version " ^ version)
+      | _ => raise Fail "Cannot determine SQLite library version" ;
       if (tableExists db "pairs") then
           println "Table 'pairs' already exists"
       else
