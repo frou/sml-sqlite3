@@ -3,7 +3,7 @@ open SQLite3
 fun println s = print (s ^ "\n")
 
 fun main () =
-  let val db = opendb "testdb"
+  let val db = openDB "testdb" true
   in
       println "Opened database";
       case execlist (simpleQuery db "SELECT sqlite_version();") of
@@ -29,7 +29,7 @@ fun main () =
       in
           print (rowsToString (execlist q))
       end;
-      close db
+      closeDB db
   end handle SqlError s => println s
 
 val _ = main ()

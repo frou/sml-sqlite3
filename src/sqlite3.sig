@@ -14,8 +14,8 @@ signature SQLITE3 = sig
 
   exception SqlError of string;
 
-  val opendb : string -> db
-  val close : db -> unit
+  val openDB : string -> bool -> db
+  val closeDB : db -> unit
 
   val query : db -> string -> value list -> query
   val simpleQuery : db -> string -> query
