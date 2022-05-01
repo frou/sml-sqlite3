@@ -3,7 +3,7 @@ open SQLite3
 fun println s = print (s ^ "\n")
 
 fun main () =
-  let val db = opendb "testdb"
+  let val db = opendb "testdb" true
   in
       println "Opened database";
       if (tableExists db "pairs") then

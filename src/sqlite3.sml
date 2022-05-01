@@ -94,12 +94,23 @@ structure SQLite3 :> SQLITE3 = struct
 
   (* Opening database *)
 
-  val sqlite3_open = _import "sqlite3_open" : string * db_pointer ref -> int;
+  val sqlite3_open_v2 = _import "sqlite3_open_v2" : string * db_pointer ref * word * pointer -> int;
 
-  fun opendb name =
+  fun opendb path createFile =
     let val p = ref null
     in
-        let val rc = sqlite3_open (name, p)
+        let
+          (* REF: https://www.sqlite.org/capi3ref.html#SQLITE_OPEN_AUTOPROXY *)
+          val flagOpenReadwrite = 0wx2
+          val flagOpenCreate    = 0wx4
+
+          (* REF: https://www.sqlite.org/capi3ref.html#sqlite3_open *)
+          val rc = sqlite3_open_v2
+            ( path
+            , p
+            , Word.orb (flagOpenReadwrite, if createFile then flagOpenCreate else 0w0)
+            , null
+            )
         in
             if rc <> 0 then
                 sqlError ("Error opening database", SOME rc, NONE)
