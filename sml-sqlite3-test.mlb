@@ -1,3 +1,0 @@
-$(SML_LIB)/basis/basis.mlb
-sml-sqlite3.mlb
-test/test.sml
