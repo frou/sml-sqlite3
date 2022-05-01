@@ -259,7 +259,7 @@ structure SQLite3 :> SQLITE3 = struct
 
   (* High-level interface *)
 
-  fun query db str vals =
+  fun buildQuery db str vals =
     let val stmt = prepare db str
     in
         let fun bind_list [] _ = ()
@@ -273,8 +273,8 @@ structure SQLite3 :> SQLITE3 = struct
         end
     end
 
-  fun simpleQuery db str =
-    query db str []
+  fun buildSimpleQuery db str =
+    buildQuery db str []
 
   fun loadRow stmt =
     let val cols = columnCount stmt
@@ -328,7 +328,7 @@ structure SQLite3 :> SQLITE3 = struct
   fun rowsToString l = String.concatWith "\n" (map rowToString l)
 
   fun tableExists db table =
-    let val q = query db
+    let val q = buildQuery db
                   "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
                   [TEXT table]
     in

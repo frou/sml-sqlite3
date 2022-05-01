@@ -17,8 +17,8 @@ signature SQLITE3 = sig
   val openDB : string -> bool -> db
   val closeDB : db -> unit
 
-  val query : db -> string -> value list -> query
-  val simpleQuery : db -> string -> query
+  val buildQuery : db -> string -> value list -> query
+  val buildSimpleQuery : db -> string -> query
 
   val exec : query -> unit
   val execlist : query -> row list
