@@ -1,7 +1,5 @@
 structure SQLiteCStr :> SQLITE_CSTR = struct
-  type cstring = MLton.Pointer.t
-
-  val strlen = _import "strlen": cstring -> int;
+  val c_strlen = _import "strlen": MLton.Pointer.t -> C_Size.word;
 
   fun readChar ptr idx =
       Byte.byteToChar (MLton.Pointer.getWord8 (ptr, idx))
@@ -10,5 +8,5 @@ structure SQLiteCStr :> SQLITE_CSTR = struct
       if cstr = MLton.Pointer.null then
           raise Fail "null pointer passed to SQLiteCStr.toString"
       else
-          CharVector.tabulate (strlen cstr, readChar cstr)
+          CharVector.tabulate (C_Size.toInt (c_strlen cstr), readChar cstr)
 end
