@@ -126,7 +126,7 @@ structure SQLite3 :> SQLITE3 = struct
 
   val sqlite3_close = _import "sqlite3_close" : pointer -> int;
 
-  fun close (DATABASE p) =
+  fun closeDB (DATABASE p) =
     let in
         let val rc = sqlite3_close p
         in
