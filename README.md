@@ -11,13 +11,13 @@ or type-safe SQL.
 open SQLite3
 
 fun test () =
-  let val db = opendb "path/to/database.db" true
+  let val db = openDB "path/to/database.db" true
   in
     let val q = query db "SELECT ... WHERE x = ? AND y = ?"
                 [Integer 10, Text "Hello!"]
     in
       print (rowsToString (execlist q));
-      close db
+      closeDB db
     end
   end
 ~~~
@@ -41,8 +41,8 @@ signature SQLITE3 = sig
 
   exception SqlError of string;
 
-  val opendb : string -> bool -> db
-  val close : db -> unit
+  val openDB : string -> bool -> db
+  val closeDB : db -> unit
   val query : db -> string -> value list -> query
   val exec : query -> unit
   val execlist : query -> row list

@@ -96,7 +96,7 @@ structure SQLite3 :> SQLITE3 = struct
 
   val sqlite3_open_v2 = _import "sqlite3_open_v2" : string * db_pointer ref * word * pointer -> int;
 
-  fun opendb path createFile =
+  fun openDB path createFile =
     let val p = ref null
     in
         let
@@ -126,7 +126,7 @@ structure SQLite3 :> SQLITE3 = struct
 
   val sqlite3_close = _import "sqlite3_close" : pointer -> int;
 
-  fun close (Database p) =
+  fun closeDB (Database p) =
     let in
         let val rc = sqlite3_close p
         in
