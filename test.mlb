@@ -2,4 +2,4 @@ $(SML_LIB)/basis/basis.mlb
 sml-sqlite3.mlb
 test.sml
 
-(*) option "-link-opt -L/usr/local/opt/sqlite/lib -link-opt -lsqlite3"
+(*) option "-link-opt -lsqlite3"
