@@ -8,17 +8,17 @@ structure SQLite3 :> SQLITE3 = struct
 
   datatype query = QUERY of stmt_pointer
 
-  type bytevec = Word8.word Vector.vector
-
   datatype value = NULL
                  | INTEGER of int
                  | REAL of real
                  | TEXT of string
-                 | BLOB of bytevec
+                 | BLOB of Word8.word vector
 
   datatype row = ROW of value list
 
-  exception SqlError of string;
+  datatype file_expectation = MUST_EXIST | MAY_NOT_EXIST
+
+  exception SqlError of string
 
   (* Errors *)
 
@@ -96,7 +96,7 @@ structure SQLite3 :> SQLITE3 = struct
 
   val sqlite3_open_v2 = _import "sqlite3_open_v2" : string * db_pointer ref * word * pointer -> int;
 
-  fun openDB path createFile =
+  fun openDB path expectation =
     let val p = ref null
     in
         let
@@ -108,7 +108,10 @@ structure SQLite3 :> SQLITE3 = struct
           val rc = sqlite3_open_v2
             ( path
             , p
-            , Word.orb (flagOpenReadwrite, if createFile then flagOpenCreate else 0w0)
+            , Word.orb
+                ( flagOpenReadwrite
+                , case expectation of MUST_EXIST => 0w0 | MAY_NOT_EXIST => flagOpenCreate
+                )
             , null
             )
         in
@@ -164,7 +167,7 @@ structure SQLite3 :> SQLITE3 = struct
   val sqlite3_bind_int = _import "sqlite3_bind_int" : stmt_pointer * param_index * int -> int;
   val sqlite3_bind_double = _import "sqlite3_bind_double" : stmt_pointer * param_index * real -> int;
   val sqlite3_bind_text = _import "sqlite3_bind_text" : stmt_pointer * param_index * string * int * pointer -> int;
-  val sqlite3_bind_blob = _import "sqlite3_bind_blob" : stmt_pointer * param_index * bytevec * int * pointer -> int;
+  val sqlite3_bind_blob = _import "sqlite3_bind_blob" : stmt_pointer * param_index * Word8.word vector * int * pointer -> int;
 
   fun ensureRC i =
     if i <> 0 then
@@ -329,6 +332,7 @@ structure SQLite3 :> SQLITE3 = struct
 
   fun tableExists db table =
     let val q = buildQuery db
+                  (* REF: https://www.sqlite.org/schematab.html *)
                   "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
                   [TEXT table]
     in

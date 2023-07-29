@@ -3,7 +3,7 @@ open SQLite3
 fun println s = print (s ^ "\n")
 
 fun main () =
-  let val db = openDB "testdb" true
+  let val db = openDB "testdb" MUST_EXIST
   in
       println "Opened database";
       case execlist (buildSimpleQuery db "SELECT sqlite_version();") of

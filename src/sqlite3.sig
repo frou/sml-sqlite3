@@ -2,19 +2,19 @@ signature SQLITE3 = sig
   type db
   type query
 
-  type bytevec = Word8.word Vector.vector
-
   datatype value = NULL
                  | INTEGER of int
                  | REAL of real
                  | TEXT of string
-                 | BLOB of bytevec
+                 | BLOB of Word8.word vector
 
   datatype row = ROW of value list
 
-  exception SqlError of string;
+  datatype file_expectation = MUST_EXIST | MAY_NOT_EXIST
 
-  val openDB : string -> bool -> db
+  exception SqlError of string
+
+  val openDB : string -> file_expectation -> db
   val closeDB : db -> unit
 
   val buildQuery : db -> string -> value list -> query
@@ -29,3 +29,7 @@ signature SQLITE3 = sig
 
   val tableExists : db -> string -> bool
 end
+
+(* @todo Any API inspiration to take from these OCaml libraries?
+   @body https://ocaml.org/p/sqlite3/
+   @body https://ocaml.org/p/sqlite3_utils/ *)
